@@ -1,0 +1,239 @@
+<?php
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ */
+?>
+<div class="p-5 mb-4 bg-light rounded-3">
+    <h1 class="display-4">User Reports - Dashboard</h1>
+    <p class="lead">Panel zarządzania i raportowania użytkowników.<br>
+    REST API z sortowaniem, filtrowaniem, paginacją oraz eksportem do XLS/PDF.</p>
+    <hr class="my-4">
+    <a class="btn btn-success btn-lg" href="/docs" >Dokumentacja ENDPOINT-ów &raquo;</a>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Funkcje API</div>
+            <div class="card-body">
+                <ul>
+                    <li>CRUD użytkowników i wykształcenia</li>
+                    <li>Sortowanie, filtrowanie, paginacja</li>
+                    <li>Eksport do XLS i PDF</li>
+                    <li>Seedowanie przykładowych danych</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Testy</div>
+            <div class="card-body">
+                <ul>
+                    <li>Testy jednostkowe i integracyjne (PHPUnit)</li>
+                    <li>Pełne pokrycie kluczowych funkcji</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <h2>Lista użytkowników</h2>
+    <div class="mb-3">
+        <input type="text" id="filterName" class="form-control" placeholder="Filtruj po imieniu..." style="max-width: 300px; display: inline-block;">
+        <button class="btn btn-primary" onclick="loadUsers()">Filtruj</button>
+        <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+        <button class="btn btn-success float-end ms-2" data-bs-toggle="modal" data-bs-target="#userModal" onclick="openAddUser()">Dodaj użytkownika</button>
+        <a class="btn btn-outline-success float-end ms-2" href="/api/user/export-xls">Pobierz XLS</a>
+        <a class="btn btn-outline-danger float-end ms-2" href="/api/user/export-pdf">Pobierz PDF</a>
+    </div>
+    <table class="table table-bordered" id="usersTable">
+        <thead>
+            <tr>
+                <th onclick="setSort('name')">Imię i nazwisko</th>
+                <th onclick="setSort('phone_number')">Telefon</th>
+                <th onclick="setSort('address')">Adres</th>
+                <th onclick="setSort('age')">Wiek</th>
+                <th onclick="setSort('education')">Wykształcenie</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <nav>
+        <ul class="pagination" id="pagination"></ul>
+    </nav>
+</div>
+
+<!-- Modal dodawania/edycji użytkownika -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userModalLabel">Dodaj użytkownika</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="userForm">
+          <input type="hidden" id="userId">
+          <div class="mb-3">
+            <label for="userName" class="form-label">Imię i nazwisko</label>
+            <input type="text" class="form-control" id="userName" required>
+          </div>
+          <div class="mb-3">
+            <label for="userPhone" class="form-label">Telefon</label>
+            <input type="text" class="form-control" id="userPhone" required>
+          </div>
+          <div class="mb-3">
+            <label for="userAddress" class="form-label">Adres</label>
+            <input type="text" class="form-control" id="userAddress" required>
+          </div>
+          <div class="mb-3">
+            <label for="userAge" class="form-label">Wiek</label>
+            <input type="number" class="form-control" id="userAge" required>
+          </div>
+          <div class="mb-3">
+            <label for="userEducation" class="form-label">Wykształcenie</label>
+            <select class="form-select" id="userEducation" required></select>
+          </div>
+          <button type="submit" class="btn btn-primary">Zapisz</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentSort = 'id';
+let currentOrder = 'ASC';
+
+function setSort(field) {
+    if (currentSort === field) {
+        currentOrder = currentOrder === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+        currentSort = field;
+        currentOrder = 'ASC';
+    }
+    loadUsers();
+}
+
+function resetFilters() {
+    document.getElementById('filterName').value = '';
+    loadUsers();
+}
+
+async function loadEducations() {
+    const res = await fetch('/api/education');
+    const data = await res.json();
+    const select = document.getElementById('userEducation');
+    select.innerHTML = '';
+    data.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = e.name;
+        select.appendChild(opt);
+    });
+}
+
+async function loadUsers(page = currentPage) {
+    const filterName = document.getElementById('filterName').value;
+    let url = `/api/user?page=${page}&limit=5&sort=${currentSort}&order=${currentOrder}`;
+    if (filterName) url += `&filter_name=${encodeURIComponent(filterName)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const tbody = document.querySelector('#usersTable tbody');
+    tbody.innerHTML = '';
+    data.data.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${u.name}</td>
+            <td>${u.phone_number}</td>
+            <td>${u.address}</td>
+            <td>${u.age}</td>
+            <td>${u.education ? (u.education.name || '') : ''}</td>
+            <td>
+                <button class='btn btn-sm btn-warning' onclick='openEditUser(${JSON.stringify(u)})'>Edytuj</button>
+                <button class='btn btn-sm btn-danger' onclick='deleteUser(${u.id})'>Usuń</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    // paginacja
+    const pag = document.getElementById('pagination');
+    pag.innerHTML = '';
+    const totalPages = Math.ceil((data.count || 0) / data.limit);
+    for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li');
+        li.className = 'page-item' + (i === data.page ? ' active' : '');
+        li.innerHTML = `<a class='page-link' href='#' onclick='loadUsers(${i});return false;'>${i}</a>`;
+        pag.appendChild(li);
+    }
+}
+
+function openAddUser() {
+    document.getElementById('userModalLabel').textContent = 'Dodaj użytkownika';
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    loadEducations();
+}
+
+function openEditUser(user) {
+    document.getElementById('userModalLabel').textContent = 'Edytuj użytkownika';
+    document.getElementById('userId').value = user.id;
+    document.getElementById('userName').value = user.name;
+    document.getElementById('userPhone').value = user.phone_number;
+    document.getElementById('userAddress').value = user.address;
+    document.getElementById('userAge').value = user.age;
+    loadEducations().then(() => {
+        document.getElementById('userEducation').value = user.education ? user.education.id : '';
+    });
+    var modal = new bootstrap.Modal(document.getElementById('userModal'));
+    modal.show();
+}
+
+document.getElementById('userForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('userId').value;
+    const payload = {
+        name: document.getElementById('userName').value,
+        phone_number: document.getElementById('userPhone').value,
+        address: document.getElementById('userAddress').value,
+        age: parseInt(document.getElementById('userAge').value),
+        education_id: parseInt(document.getElementById('userEducation').value)
+    };
+    let method = id ? 'PUT' : 'POST';
+    let url = '/api/user' + (id ? '/' + id : '');
+    const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+        var modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
+        modal.hide();
+        // Usuwam ewentualny backdrop jeśli zostaje
+        document.querySelectorAll('.modal-backdrop').forEach(e => e.remove());
+        loadUsers();
+    } else {
+        alert('Błąd podczas zapisu!');
+    }
+};
+
+async function deleteUser(id) {
+    if (!confirm('Na pewno usunąć użytkownika?')) return;
+    const res = await fetch('/api/user/' + id, { method: 'DELETE' });
+    if (res.ok) {
+        loadUsers();
+    } else {
+        alert('Błąd podczas usuwania!');
+    }
+}
+
+window.onload = function() {
+    loadUsers();
+};
+</script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

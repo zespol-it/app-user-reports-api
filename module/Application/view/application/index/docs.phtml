@@ -1,0 +1,33 @@
+<div class="container mt-4">
+    <h1>Dokumentacja ENDPOINT-ów REST API</h1>
+    <hr>
+    <h3>Użytkownicy</h3>
+    <ul>
+        <li>GET <code>/api/user</code> — lista użytkowników (obsługuje sortowanie, filtrowanie, paginację)</li>
+        <li>GET <code>/api/user/:id</code> — szczegóły użytkownika</li>
+        <li>POST <code>/api/user</code> — dodaj użytkownika</li>
+        <li>PUT <code>/api/user/:id</code> — edytuj użytkownika</li>
+        <li>DELETE <code>/api/user/:id</code> — usuń użytkownika</li>
+        <li>GET <code>/api/user/export-xls</code> — eksport do XLS</li>
+        <li>GET <code>/api/user/export-pdf</code> — eksport do PDF</li>
+        <li>GET <code>/api/user/seed</code> — dodaj przykładowych użytkowników</li>
+    </ul>
+    <h3>Wykształcenie</h3>
+    <ul>
+        <li>GET <code>/api/education</code> — lista typów wykształcenia</li>
+        <li>GET <code>/api/education/:id</code> — szczegóły typu wykształcenia</li>
+        <li>POST <code>/api/education</code> — dodaj typ wykształcenia</li>
+        <li>PUT <code>/api/education/:id</code> — edytuj typ wykształcenia</li>
+        <li>DELETE <code>/api/education/:id</code> — usuń typ wykształcenia</li>
+        <li>GET <code>/api/education/seed</code> — dodaj przykładowe typy wykształcenia</li>
+    </ul>
+    <h3>Parametry sortowania, filtrowania, paginacji</h3>
+    <ul>
+        <li><code>?sort=kolumna&order=ASC|DESC</code> — sortowanie</li>
+        <li><code>?filter_name=Jan</code> — filtr po imieniu</li>
+        <li><code>?filter_age=30</code> — filtr po wieku</li>
+        <li><code>?page=1&limit=10</code> — paginacja</li>
+    </ul>
+    <hr>
+    <a href="/" class="btn btn-secondary">Powrót do dashboardu</a>
+</div> 
